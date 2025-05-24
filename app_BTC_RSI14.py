@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
 import time
+import yfinance as yf
 
 st.set_page_config(layout="wide", page_title="BTC Trading Dashboard")
 
@@ -23,26 +24,25 @@ if 'last_update_second' not in st.session_state:
     st.session_state.last_update_second = -1
 
 
+
+
 def fetch_btc_data():
     try:
-        url = 'https://api.binance.com/api/v3/klines'
-        params = {'symbol': 'BTCUSDT', 'interval': '1m', 'limit': 500}
-        resp = requests.get(url, params=params, timeout=10)
-        resp.raise_for_status()
-        data = resp.json()
+        # Download 1-minute interval BTC-USD data for the past day
+        df = yf.download(tickers='BTC-USD', interval='1m', period='1d', progress=False)
 
-        df = pd.DataFrame(data, columns=[
-            'timestamp', 'open', 'high', 'low', 'close', 'volume',
-            'close_time', 'quote_asset_volume', 'number_of_trades',
-            'taker_buy_base_volume', 'taker_buy_quote_volume', 'ignore'
-        ])
-        df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+        # Reset index so timestamp becomes a column
+        df.reset_index(inplace=True)
+        df.rename(columns={'Datetime': 'timestamp'}, inplace=True)
         df.set_index('timestamp', inplace=True)
-        for col in ['open', 'high', 'low', 'close', 'volume']:
-            df[col] = df[col].astype(float)
-        return df[['open', 'high', 'low', 'close', 'volume']]
+
+        # Ensure correct format and column names
+        df = df[['Open', 'High', 'Low', 'Close', 'Volume']]
+        df.columns = ['open', 'high', 'low', 'close', 'volume']
+
+        return df.dropna()
     except Exception as e:
-        st.error(f"Error fetching data: {str(e)}")
+        st.error(f"Failed to fetch BTC-USD data from yfinance: {str(e)}")
         return None
 
 
