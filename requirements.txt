@@ -4,5 +4,4 @@ requests
 plotly
 streamlit-autorefresh
 yfinance
-time
 datetime
