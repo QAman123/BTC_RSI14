@@ -1,6 +1,5 @@
 import pandas as pd
 import requests
-import time
 
 def fetch_btc_data():
     url = 'https://api.binance.com/api/v3/klines'
@@ -9,7 +8,6 @@ def fetch_btc_data():
         'interval': '1m',
         'limit': 1000
     }
-
     response = requests.get(url, params=params)
     data = response.json()
 
@@ -21,7 +19,4 @@ def fetch_btc_data():
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
     df.set_index('timestamp', inplace=True)
     df = df[['close']].astype(float)
-
-    # Save to CSV
-    df.to_csv("data.csv")
-    return "data.csv"
+    return df
